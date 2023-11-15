@@ -43,6 +43,6 @@ Doing so gives a higher degree of flexibility since you can still execute your a
 
 All rights reserved.
 
-Images is under CCA 4.0 and created by *JoyPixels* from [creazilla.com](https://creazilla.com) :
+Image is under CCA 4.0 and created by *JoyPixels* from [creazilla.com](https://creazilla.com) :
 
 - [Detective](https://creazilla.com/nodes/48141-detective-emoji-clipart)
