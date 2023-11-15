@@ -38,3 +38,11 @@ $ node -r ./instrument.js index.js
 Doing so gives a higher degree of flexibility since you can still execute your application without instrumenting anything simply by removing the `-r` option in the command.
 
 *Please note that the trace contains the path of the project. Please restart JSpector or edit the trace.json file if your project changed path*
+
+## License
+
+All rights reserved.
+
+Images is under CCA 4.0 and created by *JoyPixels* from [creazilla.com](https://creazilla.com) :
+
+- [Detective](https://creazilla.com/nodes/48141-detective-emoji-clipart)
