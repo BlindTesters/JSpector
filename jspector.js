@@ -1,9 +1,14 @@
-const acorn = require('acorn');
+//const acorn = require('acorn');
+
+import * as acorn from 'acorn'
+
 const fs = require('fs');
 const path = require('path');
 const { createRequire } = require('module');
 const walk = require('acorn-walk');
 
+import {getAllCalls, deepCopy} from '../../../JStorian/jstorian.mjs';
+import * as escodegen from 'escodegen';
 
 class JSpector {
   /**
@@ -40,6 +45,9 @@ class JSpector {
 
     // Wrap the goal function.
     this.wrapFunction();
+
+    // read ast
+    const lstFuncTree = getAllCalls(this.main_file, this.fnName)
 
     // Detect SIGINT and call process.exit manually to make sure
     // it is called.

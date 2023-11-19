@@ -2,9 +2,9 @@
 const JSpector = require('../../jspector');
 
 const jspector = new JSpector(
-  'decibels',
-  'fromGain',
-  'SSE23-fourier'
+  'crypto',
+  'pbkdf2Sync',
+  'crypt'
 );
 
 jspector.start();
