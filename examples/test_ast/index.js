@@ -1,4 +1,4 @@
-import {getAllCalls, deepCopy} from '../../../JStorian/jstorian.mjs';
+import {getAllCalls, deepCopy} from '../../../JStorian/jstorian.js';
 import * as escodegen from 'escodegen';
 
 const lstFuncTree = getAllCalls('../test_crypto/index.js', 'pbkdf2Sync')

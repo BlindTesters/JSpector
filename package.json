@@ -1,7 +1,7 @@
 {
-  "type":"module",
     "dependencies": {
-      "acorn": "^8.8.2",
-      "acorn-walk": "^8.2.0"
+        "acorn": "^8.8.2",
+        "acorn-walk": "^8.2.0",
+        "escodegen": "^2.1.0"
     }
-  }
+}

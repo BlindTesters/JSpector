@@ -1,14 +1,10 @@
-//const acorn = require('acorn');
-
-import * as acorn from 'acorn'
-
+const acorn = require('acorn');
 const fs = require('fs');
 const path = require('path');
-const { createRequire } = require('module');
+const Module = require('module');
 const walk = require('acorn-walk');
-
-import {getAllCalls, deepCopy} from '../../../JStorian/jstorian.mjs';
-import * as escodegen from 'escodegen';
+const escodegen = require('escodegen');
+const { getAllCalls } = require('../JStorian/jstorian.js');
 
 class JSpector {
   /**
@@ -47,7 +43,7 @@ class JSpector {
     this.wrapFunction();
 
     // read ast
-    const lstFuncTree = getAllCalls(this.main_file, this.fnName)
+    this.buildTree();
 
     // Detect SIGINT and call process.exit manually to make sure
     // it is called.
@@ -77,7 +73,7 @@ class JSpector {
    * @returns the library.
    */
   requireLibrary() {
-    const requireUtil = createRequire(this.getLibraryPath());
+    const requireUtil = Module.createRequire(this.getLibraryPath());
     return requireUtil(this.library_name);
   }
 
@@ -118,6 +114,66 @@ class JSpector {
     });
   }
 
+  deepCopy(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+  
+  // The following 2 methods are very experimental and are only to be used as a POC!!
+  flattenNode(node) {
+    if (node.type === 'ForStatement') {
+      const flattenedCode = [];
+      const body = node.body;  // Extract loop body
+      const initialization = node.init;  // Extract initialization
+      const condition = node.test;  // Extract condition
+      const update = node.update;  // Extract update
+
+      let i = initialization.declarations[0].init.value;  // Extract initialization value
+
+      // Repeat the loop body according to condition
+      for (i; eval(`${i} ${condition.operator} ${condition.right.value}`); eval(`${update.argument.name}${update.operator}`)) {
+        let iterationBody = [];
+        for (let j = 0; j <= i; j++) {
+          iterationBody.push(...body.body);
+        }
+        // Add the loop body code to the flattened code
+        flattenedCode.push(iterationBody);
+      }
+  
+      return flattenedCode;
+    }
+    return node;
+  }
+
+  buildTree() {
+    // read ast
+    this.lstFuncTree = getAllCalls(this.main_file, this.fnName);
+    this.ast = [];
+
+    // for each statement / AST, show the header to finally use the statement
+    for (let i = 0; i < this.lstFuncTree.length; i++) {
+      let completeCodeTest = this.lstFuncTree[i].content;
+      const flattenedNode = this.flattenNode(this.lstFuncTree[i].call);
+      const bodyCopy = this.deepCopy(completeCodeTest.body);
+      const size = bodyCopy.length;
+      // remove the final call to the function
+      const bodyHeader = bodyCopy.slice(0, size-1);
+
+      // generate header depending on the type of the node.
+      if (Array.isArray(flattenedNode)) {
+        // for loops: generate a header for each iteration.
+        for(let j = 0; j < flattenedNode.length; j++) {
+          let loopBody = this.deepCopy(bodyHeader);
+          loopBody.push(...flattenedNode[j]);
+          completeCodeTest.body = loopBody;
+          this.ast.push(escodegen.generate(completeCodeTest));
+        }
+      } else {
+        completeCodeTest.body = bodyHeader;
+        this.ast.push(escodegen.generate(completeCodeTest));
+      }
+    }
+  }
+
   /**
    * This function will keep a trace of the provided input and output for
    * the target function.
@@ -135,7 +191,8 @@ class JSpector {
 
     this.TRACE[funcName].push({
       'inputs': Object.values(_inputs),
-      'output': _output
+      'output': _output,
+      'header': this.ast.shift()
     });
   }
 
@@ -254,7 +311,17 @@ class JSpector {
   start() {
     // Locate the desired library in the paths.
     let libraryPath = require.resolve(this.library_name, {paths:[this.getLibraryPath()]});
-    require.cache[libraryPath].exports = this.get_library();
+    // require.cache[libraryPath].exports = this.get_library();
+
+    const originalRequire = Module.prototype.require;
+    const outerThis = this;
+
+    Module.prototype.require = function (path) {
+      if (path === libraryPath) {
+        return outerThis.get_library();
+      }
+      return originalRequire.apply(outerThis, arguments);
+    };
   }
 }
 
